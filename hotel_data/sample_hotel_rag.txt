@@ -1,0 +1,40 @@
+HOTEL INFORMATION
+Hotel Name: Grand Example Hotel
+Website: https://example-hotel.com
+Last Updated: 2025-08-06T18:38:44.147981
+
+CONTACT INFORMATION
+Phone: (555) 123-4567
+Address: 123 Main Street, Downtown, NY 10001
+
+CHECK-IN AND CHECK-OUT
+Check-in time: 3:00 PM
+Check-out time: 11:00 AM
+
+PARKING AND TRANSPORTATION
+Parking: Available
+Parking cost: Free
+Parking type: Self-park
+
+AMENITIES AND SERVICES
+WiFi: Free WiFi available
+Fitness center: Available
+Pool: Available
+Pet policy: Pet friendly - $50 fee
+
+DINING OPTIONS
+- Main Dining Room: American cuisine with seasonal menu (Hours: 6:00 AM - 10:00 PM)
+- Lobby Bar: Craft cocktails and light appetizers (Hours: 4:00 PM - 12:00 AM)
+
+Room service: Available 24/7
+Breakfast: Continental breakfast included
+
+NEARBY ATTRACTIONS
+- Central Park (0.2 miles)
+- Metropolitan Museum (0.5 miles)
+- Times Square (1.2 miles)
+
+ADDITIONAL SERVICES
+- Tour booking
+- Restaurant reservations
+- Transportation arrangement

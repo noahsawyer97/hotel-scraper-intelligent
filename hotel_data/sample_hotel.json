@@ -1,0 +1,42 @@
+{
+  "hotel_name": "Grand Example Hotel",
+  "website_url": "https://example-hotel.com",
+  "scraped_at": "2025-08-06T18:38:44.147981",
+  "phone": "(555) 123-4567",
+  "address": "123 Main Street, Downtown, NY 10001",
+  "checkin_time": "3:00 PM",
+  "checkout_time": "11:00 AM",
+  "parking_available": true,
+  "parking_cost": "Free",
+  "parking_type": "Self-park",
+  "wifi_info": "Free WiFi available",
+  "fitness_center": true,
+  "pool": true,
+  "pet_policy": "Pet friendly - $50 fee",
+  "restaurants": [
+    {
+      "name": "Main Dining Room",
+      "type": "Fine dining",
+      "hours": "6:00 AM - 10:00 PM",
+      "details": "American cuisine with seasonal menu"
+    },
+    {
+      "name": "Lobby Bar",
+      "type": "Bar",
+      "hours": "4:00 PM - 12:00 AM",
+      "details": "Craft cocktails and light appetizers"
+    }
+  ],
+  "room_service": "Available 24/7",
+  "breakfast_info": "Continental breakfast included",
+  "nearby_attractions": [
+    "Central Park (0.2 miles)",
+    "Metropolitan Museum (0.5 miles)",
+    "Times Square (1.2 miles)"
+  ],
+  "concierge_services": [
+    "Tour booking",
+    "Restaurant reservations",
+    "Transportation arrangement"
+  ]
+}

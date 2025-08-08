@@ -1,0 +1,16 @@
+name: intelligent-hotel-scraper
+services:
+- name: api
+  source_dir: /
+  run_command: gunicorn --bind 0.0.0.0:8080 app:app
+  environment_slug: python
+  instance_count: 1
+  instance_size_slug: professional-xs
+  http_port: 8080
+  envs:
+  - key: FLASK_ENV
+    value: production
+  - key: USE_FREE_AI
+    value: "true"
+  - key: HEADLESS_BROWSER
+    value: "true"

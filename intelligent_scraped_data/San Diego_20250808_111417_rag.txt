@@ -1,0 +1,46 @@
+HOTEL INFORMATION PROFILE
+==================================================
+
+Hotel Name: San Diego
+Website: https://www.missionbayresort.com
+Data Quality Score: 0.35/1.0
+Last Updated: 2025-08-08T11:14:01.108047
+
+==================================================
+
+CONTACT AND LOCATION
+--------------------
+Address: San Diego Mission Bay
+
+HOTEL POLICIES
+--------------
+Pet Policy: True
+
+PARKING AND TRANSPORTATION
+--------------------------
+Parking: Information not available
+
+HOTEL AMENITIES
+---------------
+WiFi: Free WiFi available
+Fitness Center: Available - vice     view menus      spa       overview     spa brezza     spa specials     fitness center      
+Pool: Standard pool available
+
+DINING OPTIONS
+--------------
+Room Service: 24 hours
+
+NEARBY ATTRACTIONS
+------------------
+  • AAA & Senior Rates     Business Travel     Start Planning      Dining       Overview     Covewood     Plaza Del Sol     Solrisa     Mission Joe     Room Service     View Menus      Spa       Overview     Spa Brezza     Spa Specials     Fitness Center      Experiences & Events       Property Activities     Events Calendar     Explore San Diego     Water Sport Rentals     Pickleball     Labor Day
+  • SPA & FITNESS CENTER          
+
+ADDITIONAL SERVICES
+-------------------
+  • Uber - ver terrace innargonaut hotelsan diego mission bay...
+  • Spa - olrisa     mission joe     room service     view m...
+
+==================================================
+This data was extracted using AI-enhanced web scraping
+Confidence Score: 0.35 (higher is better)
+For the most current information, please contact the hotel directly.

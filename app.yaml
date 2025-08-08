@@ -1,0 +1,37 @@
+# DigitalOcean App Platform Configuration - Direct Upload
+name: intelligent-hotel-scraper
+static_sites: []
+services:
+- name: api
+  source_dir: /
+  run_command: gunicorn --bind 0.0.0.0:8080 app:app
+  environment_slug: python
+  instance_count: 1
+  instance_size_slug: professional-xs  # Upgraded for AI processing
+  http_port: 8080
+  envs:
+  - key: FLASK_ENV
+    value: production
+  - key: SCRAPE_TIMEOUT
+    value: "60"
+  - key: MAX_RETRIES
+    value: "3"
+  - key: HEADLESS_BROWSER
+    value: "true"
+  - key: OUTPUT_DIR
+    value: "scraped_data"
+  - key: USE_FREE_AI
+    value: "true"
+  - key: HUGGINGFACE_TOKEN
+    scope: RUN_TIME
+    type: SECRET
+
+databases:
+- name: redis-cache
+  engine: REDIS
+  version: "7"
+  
+- name: postgres-db
+  engine: PG
+  version: "15"
+  size: basic-xxs

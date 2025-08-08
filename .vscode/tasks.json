@@ -1,0 +1,16 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Run Hotel Scraper Demo",
+			"type": "shell",
+			"command": "\"/Users/noah/Downloads/Hotel Scraping/.venv/bin/python\"",
+			"args": [
+				"demo.py"
+			],
+			"group": "build",
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}
