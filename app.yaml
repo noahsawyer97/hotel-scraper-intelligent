@@ -1,24 +1,4 @@
-# DigitalOcean  envs:
-  - key: FLASK_ENV
-    value: production
-  - key: SCRAPE_TIMEOUT
-    value: "60"
-  - key: MAX_RETRIES
-    value: "3"
-  - key: HEADLESS_BROWSER
-    value: "true"
-  - key: OUTPUT_DIR
-    value: "scraped_data"
-  - key: USE_FREE_AI
-    value: "true"
-  - key: USE_OPENAI_API
-    value: "true"
-  - key: OPENAI_API_KEY
-    scope: RUN_TIME
-    type: SECRET
-  - key: HUGGINGFACE_TOKEN
-    scope: RUN_TIME
-    type: SECRET Configuration - GitHub Integration
+# DigitalOcean App Platform Configuration - GitHub Integration
 name: intelligent-hotel-scraper
 static_sites: []
 services:
