@@ -29,9 +29,22 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.common.exceptions import TimeoutException, WebDriverException
 
-from transformers import pipeline, AutoTokenizer, AutoModel
-import torch
-from sentence_transformers import SentenceTransformer
+# Heavy AI libraries - optional imports for disk space optimization
+try:
+    from transformers import pipeline, AutoTokenizer, AutoModel
+    import torch
+    TORCH_AVAILABLE = True
+except ImportError:
+    TORCH_AVAILABLE = False
+    print("⚠️  PyTorch/Transformers not available - using lightweight AI mode")
+
+try:
+    from sentence_transformers import SentenceTransformer
+    SENTENCE_TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    SENTENCE_TRANSFORMERS_AVAILABLE = False
+    print("⚠️  Sentence Transformers not available - using basic semantic analysis")
+
 import spacy
 from textstat import flesch_reading_ease
 import pandas as pd
@@ -166,81 +179,71 @@ class IntelligentHotelScraper:
             self._initialize_ai_models()
     
     def _initialize_ai_models(self):
-        """Initialize free AI models with GPT-oss-20b"""
+        """Initialize AI models with fallbacks for missing libraries"""
         try:
-            # Use free/local models instead of paid APIs
-            logger.info("Initializing AI models with GPT-oss-20b...")
+            logger.info("Initializing AI models in lightweight mode...")
             
-            # Check for GPU availability
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            logger.info(f"Using device: {device}")
-            
-            # Primary text generation model: GPT-oss-20b
-            try:
-                # Configure model loading based on available hardware
-                model_kwargs = {
-                    "token": HUGGINGFACE_TOKEN,  # Optional
-                    "max_length": 2048,
-                    "do_sample": True,
-                    "temperature": 0.7,
-                    "pad_token_id": 50256  # Standard GPT pad token
-                }
+            # Check available AI libraries
+            if not TORCH_AVAILABLE:
+                logger.warning("PyTorch not available - advanced text generation disabled")
+                self.text_generator = None
+            else:
+                # Check for GPU availability
+                device = "cuda" if torch.cuda.is_available() else "cpu"
+                logger.info(f"Using device: {device}")
                 
-                if torch.cuda.is_available():
-                    # GPU available - use full model with GPU acceleration
-                    model_kwargs.update({
-                        "device_map": "auto",
-                        "torch_dtype": torch.float16,  # Use half precision for memory efficiency
-                    })
-                    logger.info("🚀 GPU detected - loading full GPT-oss-20b model")
-                else:
-                    # CPU only - use lighter configuration
-                    model_kwargs.update({
-                        "device": 0 if device == "cuda" else -1,
-                        "torch_dtype": torch.float32,
-                    })
-                    logger.info("💻 CPU mode - loading GPT-oss-20b with CPU optimization")
-                
-                self.text_generator = pipeline(
-                    "text-generation",
-                    model="openai/gpt-oss-20b",
-                    **model_kwargs
-                )
-                logger.info("✅ GPT-oss-20b loaded successfully")
-                
-            except Exception as e:
-                logger.warning(f"GPT-oss-20b failed, trying smaller model: {e}")
-                # Fallback to a smaller but reliable model
+                # Try to initialize text generation model
                 try:
-                    self.text_generator = pipeline(
-                        "text-generation",
-                        model="microsoft/DialoGPT-medium",
-                        token=HUGGINGFACE_TOKEN,
-                        device=0 if device == "cuda" else -1
-                    )
-                    logger.info("✅ DialoGPT-medium loaded as fallback")
-                except Exception as e2:
-                    logger.error(f"All text generation models failed: {e2}")
+                    if torch.cuda.is_available():
+                        # GPU available - use full model with GPU acceleration
+                        self.text_generator = pipeline(
+                            "text-generation",
+                            model="openai/gpt-oss-20b",
+                            token=HUGGINGFACE_TOKEN,
+                            device_map="auto",
+                            torch_dtype=torch.float16,
+                            max_length=2048,
+                            do_sample=True,
+                            temperature=0.7,
+                            pad_token_id=50256
+                        )
+                        logger.info("✅ GPT-oss-20b loaded successfully")
+                    else:
+                        # Use smaller CPU-friendly model
+                        self.text_generator = pipeline(
+                            "text-generation",
+                            model="distilgpt2",
+                            device=-1,  # CPU
+                            max_length=512
+                        )
+                        logger.info("✅ DistilGPT2 loaded for CPU")
+                        
+                except Exception as e:
+                    logger.warning(f"Text generation model failed: {e}")
                     self.text_generator = None
             
-            # Lightweight sentence transformer for embeddings
-            try:
-                device_for_st = "cuda" if torch.cuda.is_available() else "cpu"
-                self.sentence_transformer = SentenceTransformer('all-MiniLM-L6-v2', device=device_for_st)
-                logger.info(f"✅ Sentence transformer loaded on {device_for_st}")
-            except Exception as e:
-                logger.warning(f"Sentence transformer failed: {e}")
+            # Sentence transformer for embeddings
+            if not SENTENCE_TRANSFORMERS_AVAILABLE:
+                logger.warning("Sentence Transformers not available - using basic similarity")
                 self.sentence_transformer = None
+            else:
+                try:
+                    device_for_st = "cuda" if TORCH_AVAILABLE and torch.cuda.is_available() else "cpu"
+                    self.sentence_transformer = SentenceTransformer('all-MiniLM-L6-v2', device=device_for_st)
+                    logger.info(f"✅ Sentence transformer loaded on {device_for_st}")
+                except Exception as e:
+                    logger.warning(f"Sentence transformer failed: {e}")
+                    self.sentence_transformer = None
             
-            # Simple NER with spaCy (more reliable than BERT)
+            # Simple NER with spaCy (lightweight)
             try:
                 self.nlp = spacy.load("en_core_web_sm")
                 logger.info("✅ spaCy NER loaded")
             except OSError:
-                logger.warning("spaCy model not found. Install with: python -m spacy download en_core_web_sm")
+                logger.warning("spaCy model not found. Using basic text processing")
                 self.nlp = None
             
-            # Text statistics (free)
+            # Text statistics (lightweight)
             try:
                 import textstat
                 self.textstat = textstat
@@ -249,12 +252,16 @@ class IntelligentHotelScraper:
                 self.textstat = None
                 logger.info("Text statistics not available (optional)")
             
-            logger.info("🎉 Free AI models initialized successfully")
+            logger.info("🎉 AI models initialized (lightweight mode)")
             
         except Exception as e:
             logger.error(f"Failed to initialize AI models: {e}")
             logger.info("Continuing with basic extraction (no AI features)")
             self.use_ai = False
+            self.text_generator = None
+            self.sentence_transformer = None
+            self.nlp = None
+            self.textstat = None
     
     def setup_driver(self):
         """Initialize Chrome WebDriver with enhanced options"""

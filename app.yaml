@@ -1,13 +1,16 @@
-# DigitalOcean App Platform Configuration - Direct Upload
+# DigitalOcean App Platform Configuration - GitHub Integration
 name: intelligent-hotel-scraper
 static_sites: []
 services:
 - name: api
   source_dir: /
+  github:
+    repo: noahsawyer97/hotel-scraper-intelligent
+    branch: main
   run_command: gunicorn --bind 0.0.0.0:8080 app:app
   environment_slug: python
   instance_count: 1
-  instance_size_slug: professional-xs  # Upgraded for AI processing
+  instance_size_slug: professional-s  # Upgraded for more disk space and memory
   http_port: 8080
   envs:
   - key: FLASK_ENV
@@ -22,16 +25,3 @@ services:
     value: "scraped_data"
   - key: USE_FREE_AI
     value: "true"
-  - key: HUGGINGFACE_TOKEN
-    scope: RUN_TIME
-    type: SECRET
-
-databases:
-- name: redis-cache
-  engine: REDIS
-  version: "7"
-  
-- name: postgres-db
-  engine: PG
-  version: "15"
-  size: basic-xxs
