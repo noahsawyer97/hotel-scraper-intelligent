@@ -65,8 +65,17 @@ HUGGINGFACE_TOKEN = os.getenv('HUGGINGFACE_TOKEN')  # Optional for free models
 try:
     import openai
     OPENAI_AVAILABLE = True
+    # Configure OpenAI client
+    openai_api_key = os.getenv('OPENAI_API_KEY')
+    if openai_api_key:
+        openai.api_key = openai_api_key
+        USE_OPENAI_API = os.getenv('USE_OPENAI_API', 'false').lower() == 'true'
+    else:
+        USE_OPENAI_API = False
+        logger.warning("OPENAI_API_KEY not found in environment variables")
 except ImportError:
     OPENAI_AVAILABLE = False
+    USE_OPENAI_API = False
     if not USE_FREE_AI:
         logger.warning("OpenAI not available, falling back to free AI models")
 
@@ -378,6 +387,100 @@ class IntelligentHotelScraper:
         """Synchronous wrapper for scrape_hotel_intelligent"""
         return asyncio.run(self.scrape_hotel_intelligent(url, hotel_name))
     
+    async def _extract_with_openai(self, content: str, extraction_type: str, context: str = "") -> Dict:
+        """Use OpenAI API for intelligent content extraction"""
+        if not USE_OPENAI_API or not OPENAI_AVAILABLE:
+            return {}
+            
+        try:
+            # Create extraction prompts based on type
+            prompts = {
+                "hotel_info": f"""
+Extract hotel information from this webpage content. Return a JSON object with these fields:
+- hotel_name: The official name of the hotel
+- phone: Phone number (format: clean, no extra text)
+- email: Email address if found
+- address: Full street address
+- city: City name
+- state: State/province
+- zip_code: ZIP or postal code
+
+Content: {content[:3000]}
+
+Return only valid JSON:""",
+
+                "policies": f"""
+Extract hotel policies from this content. Return JSON with these fields:
+- checkin_time: Check-in time (e.g., "3:00 PM")
+- checkout_time: Check-out time (e.g., "11:00 AM")
+- cancellation_policy: Brief summary of cancellation rules
+- deposit_policy: Information about deposits or holds
+- age_restrictions: Any age-related policies
+- early_checkin_policy: Early check-in information
+- late_checkout_policy: Late check-out information
+
+Content: {content[:3000]}
+
+Return only valid JSON:""",
+
+                "amenities": f"""
+Extract hotel amenities and services from this content. Return JSON with these fields:
+- amenities: Array of amenity names (pool, gym, wifi, etc.)
+- business_services: Array of business-related services
+- recreational_services: Array of recreational activities
+- accessibility_features: Array of accessibility features
+
+Content: {content[:3000]}
+
+Return only valid JSON:""",
+
+                "dining": f"""
+Extract dining information from this content. Return JSON with these fields:
+- restaurants: Array of restaurant names and descriptions
+- bars_lounges: Array of bar/lounge information
+- room_service: Room service information
+- breakfast_info: Breakfast details and hours
+
+Content: {content[:3000]}
+
+Return only valid JSON:"""
+            }
+            
+            prompt = prompts.get(extraction_type, "")
+            if not prompt:
+                return {}
+                
+            # Call OpenAI API
+            client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a hotel information extraction expert. Always return valid JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=1000,
+                temperature=0.1
+            )
+            
+            result_text = response.choices[0].message.content.strip()
+            
+            # Try to parse JSON response
+            try:
+                # Clean up response (remove markdown formatting if present)
+                if result_text.startswith("```json"):
+                    result_text = result_text.split("```json")[1].split("```")[0]
+                elif result_text.startswith("```"):
+                    result_text = result_text.split("```")[1].split("```")[0]
+                    
+                return json.loads(result_text)
+            except json.JSONDecodeError:
+                logger.warning(f"Failed to parse OpenAI JSON response for {extraction_type}")
+                return {}
+                
+        except Exception as e:
+            logger.error(f"OpenAI extraction failed for {extraction_type}: {e}")
+            return {}
+
     async def _extract_hotel_name_ai(self, soup: BeautifulSoup) -> str:
         """AI-enhanced hotel name extraction"""
         # Multiple strategies for finding hotel name
@@ -415,18 +518,35 @@ class IntelligentHotelScraper:
     
     async def _extract_contact_info_ai(self, soup: BeautifulSoup, hotel_info: IntelligentHotelInfo):
         """AI-enhanced contact information extraction"""
+        # Try OpenAI first if available
+        if USE_OPENAI_API and OPENAI_AVAILABLE:
+            content = self._extract_meaningful_content(soup)
+            openai_result = await self._extract_with_openai(content, "hotel_info")
+            
+            if openai_result:
+                # Update hotel info with OpenAI results
+                for field in ['phone', 'email', 'address', 'city', 'state', 'zip_code']:
+                    if field in openai_result and openai_result[field]:
+                        setattr(hotel_info, field, openai_result[field])
+                
+                # Also update hotel name if found
+                if 'hotel_name' in openai_result and openai_result['hotel_name']:
+                    hotel_info.hotel_name = openai_result['hotel_name']
+                
+                return  # OpenAI extraction successful, skip fallback
+        
+        # Fallback to traditional extraction methods
         text = soup.get_text()
         
-        if self.use_ai and self.nlp_ner:
+        if self.use_ai and self.nlp:
             # Use NER to find contact information
-            entities = self.nlp_ner(text[:2000])  # Limit text for performance
+            doc = self.nlp(text[:2000])  # Limit text for performance
             
-            for entity in entities:
-                if entity['entity_group'] == 'PER' and '@' in entity['word']:
-                    hotel_info.email = entity['word']
-                elif entity['entity_group'] == 'LOC':
-                    if not hotel_info.address:
-                        hotel_info.address = entity['word']
+            for ent in doc.ents:
+                if ent.label_ == "PERSON" and '@' in ent.text:
+                    hotel_info.email = ent.text
+                elif ent.label_ in ["GPE", "LOC"] and not hotel_info.address:
+                    hotel_info.address = ent.text
         
         # Phone number extraction with improved patterns
         phone_patterns = [
@@ -449,6 +569,24 @@ class IntelligentHotelScraper:
     
     async def _extract_policies_ai(self, soup: BeautifulSoup, hotel_info: IntelligentHotelInfo):
         """AI-enhanced policy extraction"""
+        # Try OpenAI first if available
+        if USE_OPENAI_API and OPENAI_AVAILABLE:
+            content = self._extract_meaningful_content(soup)
+            openai_result = await self._extract_with_openai(content, "policies")
+            
+            if openai_result:
+                # Update hotel info with OpenAI results
+                policy_fields = [
+                    'checkin_time', 'checkout_time', 'cancellation_policy', 
+                    'deposit_policy', 'age_restrictions', 'early_checkin_policy', 
+                    'late_checkout_policy'
+                ]
+                for field in policy_fields:
+                    if field in openai_result and openai_result[field]:
+                        setattr(hotel_info, field, openai_result[field])
+                return  # OpenAI extraction successful, skip fallback
+        
+        # Fallback to traditional extraction
         text = soup.get_text().lower()
         
         # Enhanced time extraction with context understanding

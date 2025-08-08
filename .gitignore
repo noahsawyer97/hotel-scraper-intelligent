@@ -1,0 +1,108 @@
+# Environment variables and secrets
+.env
+.env.local
+.env.production
+.env.development
+*.env
+
+# API Keys and secrets
+api_keys.txt
+secrets.txt
+config.ini
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+.venv
+venv/
+ENV/
+env/
+.env
+
+# IDE
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Scraped data (potentially sensitive)
+scraped_data/
+intelligent_scraped_data/
+hotel_data/*.json
+output/
+data/
+
+# Selenium
+chromedriver
+geckodriver
+*.exe
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Model files (large)
+*.bin
+*.h5
+*.pkl
+*.model
+models/
+
+# Docker
+.dockerignore
+Dockerfile.local
